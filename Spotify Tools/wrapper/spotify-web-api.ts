@@ -258,8 +258,8 @@ class Spotify {
     }
 }
 
-var spotify = new Spotify('658cd5bf770340aa8f0598c028d1ea3b', '4122cf44e1d8432fac7e549fb824139f', 'https://later.com');
-spotify.setRefreshToken('AQD1CkDxwlb8ARTGGERyv2O6Qm3wOwhwAIDdQtwZoyn2isy7DIWbPBk3JVDoj8N7uzEC6UJknW6Gys1hCagyCR0yJ96654N2_M9hIu6GwQQ1v8PcNPjs7y5uW_4FDjRPzEM');
+var spotify = new Spotify('[Client ID]', '<Client Secret>, 'https://later.com');
+spotify.setRefreshToken('[Refresh Token]');
 
 let newScopes = [
     'playlist-read-collaborative', 
