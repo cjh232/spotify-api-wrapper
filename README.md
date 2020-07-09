@@ -14,6 +14,11 @@ var sp = require('spotify-web-api');
 ### Future Authentication:
 
 Wrapper will eventually use **Authorization Code Flow with Proof Key for Code Exchange (PKCE)** to avoid the need for a Client Secret.
+
+> The authorization code flow with PKCE is the best option for mobile and desktop applications where it is unsafe to store your client secret. It provides your app with an access token that can be refreshed.
+
+For more information, refer to the [Spotify Authorization Guide](https://developer.spotify.com/documentation/general/guides/authorization-guide/#authorization-code-flow)
+
 To declare the Spotify class you will need to provide the **Client ID** and a **Redirect URI**.
 
 ```js
