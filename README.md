@@ -1,8 +1,24 @@
 # spotify-api-wrapper
 Node JS wrapper for Spotify REST API
 
-## Progress
+## Progress:
 Wrapper is in it's inital stages and will be updated heavily.
+
+## Features:
+
+### Playlists
+- Access a user's playlist by passing spotify user name
+```js 
+getUserPlaylists(userID, formOptions?)
+```
+- Access current user's playlist
+```js
+getCurrentUsersPlaylists(formOptions?)
+```
+- Access a specific playlist by passing the spotify playlist Id
+```js
+getPlaylistById(playlistId: string, formOptions?)
+```
 
 ## Usage
 
@@ -25,7 +41,7 @@ To declare the Spotify class you will need to provide the **Client ID** and a **
 var spotify = new sp.Spotify('[Client Id]', '[Redirect URL]');
 ```
 
-### Current Authentication
+### Current Authentication:
 
 For now the wrapper uses **Authorization Code Flow** and will require a Client Secret, Cliend Id, and Redirect URI when instantiating.
 
@@ -33,4 +49,22 @@ For now the wrapper uses **Authorization Code Flow** and will require a Client S
 var spotify = new sp.Spotify('[Client Id]', '[Client Secret]', '[Redirect URL]');
 ```
 ***The three arguments above must match the information found on the Spotify Dev Dashboard. Otherwise, the program will not work.***
+
+### Scopes:
+
+Before making the authorization request from the User, you must specify the scope of the permissions you are asking for. Spotify offers a list of available scopes and
+their descriptions [here](https://developer.spotify.com/documentation/general/guides/scopes/).
+
+To set the scope you will need to pass a string array, with each index holding the specific scopes needed. This can be given to the **setScope()** function.
+
+```js
+let newScopes = [
+    'playlist-read-collaborative', 
+    'user-top-read',
+    'playlist-read-private',
+    'user-follow-read',
+    'user-library-read',
+]
+spotify.setScope(newScopes);
+```
 
