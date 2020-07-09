@@ -9,7 +9,7 @@ Wrapper is in it's inital stages and will be updated heavily.
 ### Playlists
 - Access a user's playlist by passing spotify user name
 ```js 
-getUserPlaylists(userID, formOptions?)
+getUserPlaylists(userID: string, formOptions?)
 ```
 - Access current user's playlist
 ```js
