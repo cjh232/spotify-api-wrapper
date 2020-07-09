@@ -16,6 +16,10 @@ var sp = require('spotify-web-api');
 Wrapper will eventually use **Authorization Code Flow with Proof Key for Code Exchange (PKCE)** to avoid the need for a Client Secret.
 To declare the Spotify class you will need to provide the **Client ID** and a **Redirect URI**.
 
+```js
+var spotify = new sp.Spotify('[Client Id]', '[Redirect URL]');
+```
+
 ### Current Authentication
 
 For now the wrapper uses **Authorization Code Flow** and will require a Client Secret, Cliend Id, and Redirect URI when instantiating.
