@@ -1,5 +1,5 @@
 # spotify-api-wrapper
-Node JS wrapper for Spotify REST API
+Node JS wrapper for the RESTful Spotify API. Wrapper was built as a tool for a larger web application bootstrapped into any other applications being designed.
 
 ## Progress:
 Wrapper is in it's inital stages and will be updated heavily.
@@ -27,7 +27,7 @@ First, you must instantaite the wrapper.
 ```js
 var sp = require('spotify-web-api');
 ```
-### Future Authentication:
+### Future Authorization:
 
 Wrapper will eventually use **Authorization Code Flow with Proof Key for Code Exchange (PKCE)** to avoid the need for a Client Secret.
 
@@ -41,7 +41,7 @@ To declare the Spotify class you will need to provide the **Client ID** and a **
 var spotify = new sp.Spotify('[Client Id]', '[Redirect URL]');
 ```
 
-### Current Authentication:
+### Current Authorization:
 
 For now the wrapper uses **Authorization Code Flow** and will require a Client Secret, Cliend Id, and Redirect URI when instantiating.
 
