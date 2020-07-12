@@ -1,23 +1,30 @@
 var request = require('request-promise');
 var hashGen = require("crypto");
 var querystring = require("querystring");
+var secret = require('./secret');
 
+
+
+/* TODO:----------------
+    ***** GET NEW REFRESH TOKEN (Nothing will work until then) ******
+    1. [DONE] Create function to get access token from spotify API
+    2. [DONE] Create authorization function ** Need to be tested in Angular for the proper flow
+    3. Store codeVerifier into local storage in generateAuthorizationUrl()
+    4. [DONE] Create a setAccessTokenExpiration() function
+
+*/
 
 class Spotify {
 
-    clientId;
-    clientSecret;
-    redirectUri;
+    credentials;
     baseUrl = 'https://api.spotify.com/v1';
-    refreshToken;
-    accessToken;
     expirationTime;
     scope = "";
 
     constructor(clientId: string, clientSecret: string, redirectUri: string) {
-        this.clientId = clientId;
-        this.redirectUri = redirectUri;
-        this.clientSecret = clientSecret;
+        this._setCredential('clientId', clientId);
+        this._setCredential('clientSecret', clientSecret);
+        this._setCredential('redirectUri', redirectUri);
     }
 
     _generateRandomString(length: number): string {
@@ -30,6 +37,12 @@ class Spotify {
         return text;
       }
 
+    _setCredential(key: string, val: string) {
+        this.credentials = this.credentials || {};
+        this.credentials[key] = val;
+
+    }
+
     async _postRequest(options: object): Promise<any> {
 
         return new Promise( function(resolve, reject) {
@@ -38,7 +51,7 @@ class Spotify {
                     resolve(res);
                 })
                 .catch(err => {
-                    reject(`POST: ${err.statusCode}`);
+                    reject(`POST: ${err.message}`);
                 })
         })
 
@@ -57,22 +70,38 @@ class Spotify {
         })
     }
 
+    async _buildRequest(method: string, options, formOptions?) {
 
-    /* TODO:----------------
-    
-        1. [DONE] Create function to get access token from spotify API
-        2. [DONE] Create authorization function ** Need to be tested in Angular for the proper flow
-        3. Store codeVerifier into local storage in generateAuthorizationUrl()
-        4. [DONE] Create a setAccessTokenExpiration() function
-    
-    */
+        if(formOptions != null) {
+            options.url += `?${querystring.stringify(formOptions)}`;
+
+        }
+
+        var func;
+
+        switch(method) {
+            case 'POST':
+                func = this._postRequest;
+                break;
+            case 'GET':
+                func = this._getRequest;
+        }
+
+        return new Promise((resolve, reject) => {
+            func(options)
+                .then(res => {
+                    resolve(res);
+                })
+                .catch(err => reject(err));
+        });
+    }
 
     setRefreshToken(token: string): void {
-        this.refreshToken = token;
+        this._setCredential('refresh', token);
     }
 
     setAccessToken(token: string): void {
-        this.accessToken = token;
+        this._setCredential('access', token);
     }
 
     setScope(scopes: string[]): void {
@@ -89,16 +118,16 @@ class Spotify {
 
     async renewAccessToken() {
 
-        if(this.refreshToken == null) {
+        if(this.credentials['refresh'] == null) {
             throw 'No refresh token has been supplied.';
         }
 
         var authOptions = {
             url: 'https://accounts.spotify.com/api/token',
-            headers: { 'Authorization': 'Basic ' + (Buffer.from(this.clientId + ':' + this.clientSecret).toString('base64')) },
+            headers: { 'Authorization': 'Basic ' + (Buffer.from(this.credentials['clientId'] + ':' + this.credentials['clientSecret']).toString('base64')) },
             form: {
             grant_type: 'refresh_token',
-            refresh_token: this.refreshToken,
+            refresh_token: this.credentials['refresh'],
             },
             json: true
         };
@@ -106,14 +135,13 @@ class Spotify {
         return new Promise((resolve, reject) => {
             this._postRequest(authOptions)
                 .then(res => {
-                    this.accessToken = res.access_token;
+                    this.setAccessToken(res.access_token);
                     this._setAccessTokenExpirationTime(res.expires_in);
-                    resolve(this.accessToken);
+                    resolve(this.credentials['access']);
                 })
                 .catch(err => reject(err));
         })
 
-        return Promise.resolve(this.accessToken);
     }
 
     async _verifyAccessToken() {
@@ -142,13 +170,14 @@ class Spotify {
                                     
         var authUrl = 'https://accounts.spotify.com/authorize?' + querystring.stringify({
             response_type: 'code',
-            client_id: this.clientId,
+            client_id: this.credentials['clientId'],
             scope: this.scope,
             redirect_uri: 'http://localhost:8888/callback',
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
         })
 
+        return authUrl;
         // console.log("Authorization URL:\n" + authUrl);
     }
 
@@ -158,14 +187,14 @@ class Spotify {
         var options = {
         url: 'https://accounts.spotify.com/api/token',
         form: {
-            client_id: this.clientId,
+            client_id: this.credentials['clientId'],
             code: authCode,
-            redirect_uri: this.redirectUri,
+            redirect_uri: this.credentials['redirectUri'],
             grant_type: 'authorization_code',
             code_verifier: codeVerifier
         },
         headers: {
-            'Authorization': 'Basic ' + (new Buffer(this.clientId + ':' + this.clientSecret).toString('base64'))
+            'Authorization': 'Basic ' + (new Buffer(this.credentials['clientId'] + ':' + this.credentials['clientSecret']).toString('base64'))
         },
         json: true
         };
@@ -174,11 +203,11 @@ class Spotify {
         this.setAccessToken(response.access_token);
         this.setRefreshToken(response.refresh_token);
 
-        return Promise.resolve({ access_token: this.accessToken, refresh_token: this.refreshToken });
+        return Promise.resolve({ access_token: this.credentials['access'], refresh_token: this.credentials['refresh'] });
     }
 
     //formOptions - {limit, offset}
-    async getUserPlaylists(userID, formOptions?): Promise<any> {
+    async getUserPlaylists(userID: string, formOptions?): Promise<any> {
 
         await this._verifyAccessToken();
 
@@ -186,25 +215,14 @@ class Spotify {
 
         var options = {
             url: url,
-            headers: { 'Authorization': 'Bearer ' + this.accessToken },
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access'] },
             json: true,
         }
 
-        if(formOptions != null) {
-            options.url += `?${querystring.stringify(formOptions)}`;
-
-        }
-
-        return new Promise((resolve, reject) => {
-            this._getRequest(options)
-                .then(res => {
-                    resolve(res.items);
-                })
-                .catch(err => reject(err));
-        })
+        return this._buildRequest('GET', options, formOptions);
     }
 
-    async getCurrentUsersPlaylists(formOptions?): Promise<any> {
+    async getMyPlaylists(formOptions?): Promise<any> {
 
         await this._verifyAccessToken();
 
@@ -212,24 +230,11 @@ class Spotify {
 
         var options = {
             url: url,
-            headers: { 'Authorization': 'Bearer ' + this.accessToken },
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
             json: true,
         }
 
-        if(formOptions != null) {
-            options.url += `?${querystring.stringify(formOptions)}`;
-
-        }
-
-        return new Promise((resolve, reject) => {
-            this._getRequest(options)
-                .then(res => {
-                    resolve(res.items);
-                })
-                .catch(err => reject(err));
-        })
-
-
+        return this._buildRequest('GET', options, formOptions);
 
     }
 
@@ -238,29 +243,55 @@ class Spotify {
 
         var options = {
             url: url,
-            headers: { 'Authorization': 'Bearer ' + this.accessToken },
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
             json: true,
         }
 
-        if(formOptions != null) {
-            options.url += `?${querystring.stringify(formOptions)}`;
-
-        }
-
-        return new Promise((resolve, reject) => {
-            this._getRequest(options)
-                .then(res => {
-                    resolve(res);
-                })
-                .catch(err => reject(err));
-        })
+        return this._buildRequest('GET', options, formOptions);
 
     }
+
+    async getPlaylistTracks(playlistId: string, formOptions?): Promise<any> {
+        var url = `${this.baseUrl}/playlists/${playlistId}/tracks`
+
+        var options = {
+            url: url,
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
+            json: true,
+        }
+
+        return this._buildRequest('GET', options, formOptions);
+
+    }
+
+    async getMyTopTracks(formOptions?): Promise<any> {
+        var url = `${this.baseUrl}/me/top/tracks`;
+
+        var options = {
+            url: url,
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
+            json: true,
+        }
+
+        return this._buildRequest('GET', options, formOptions);
+
+    }
+
+    async getMyTopArtists(formOptions?): Promise<any> {
+        var url = `${this.baseUrl}/me/top/artists`;
+
+        var options = {
+            url: url,
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
+            json: true,
+        }
+
+        return this._buildRequest('GET', options, formOptions);
+    }
+
 }
 
-var spotify = new Spotify('658cd5bf770340aa8f0598c028d1ea3b', '4122cf44e1d8432fac7e549fb824139f', 'https://later.com');
-spotify.setRefreshToken('AQD1CkDxwlb8ARTGGERyv2O6Qm3wOwhwAIDdQtwZoyn2isy7DIWbPBk3JVDoj8N7uzEC6UJknW6Gys1hCagyCR0yJ96654N2_M9hIu6GwQQ1v8PcNPjs7y5uW_4FDjRPzEM');
-
+var spotify = new Spotify(secret.clientId, secret.clientSecret, 'https://later.com');
 let newScopes = [
     'playlist-read-collaborative', 
     'user-top-read',
@@ -268,18 +299,26 @@ let newScopes = [
     'user-follow-read',
     'user-library-read',
 ]
-
 spotify.setScope(newScopes);
+
+spotify.setRefreshToken(secret.refresh);
+
 
 spotify.renewAccessToken()
     .then(token => {
-        return spotify.getCurrentUsersPlaylists();
+        return spotify.getMyTopArtists({time_range: 'long_term', limit: 5});
     })
-    .then(playlists => {
-        playlists.forEach(playlist => console.log(playlist.name))
+    .then(topArtists => {
+        topArtists.items.forEach(artist => console.log(artist.name))
     })
     .catch(err => console.log(err));
 
 
+
+
+
+module.exports = {
+    Spotify: Spotify,
+}
 
 // spotify.generateAuthorizationUrl();
