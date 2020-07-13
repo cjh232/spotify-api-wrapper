@@ -22,7 +22,7 @@ Wrapper is in it's inital stages and will be updated heavily.
 
 ### TODO:
 - Get user's liked songs
-- Spotifty search
+- Spotify search
 
 ## Usage
 
