@@ -289,6 +289,31 @@ class Spotify {
         return this._buildRequest('GET', options, formOptions);
     }
 
+    async getMyProfile(): Promise<any> {
+        var url = `${this.baseUrl}/me`;
+
+        var options = {
+            url: url,
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
+            json: true,
+        }
+
+        return this._buildRequest('GET', options);
+    }
+
+    async getUserProfile(userID: string): Promise<any> {
+        var url = `${this.baseUrl}/users/${userID}`;
+
+
+        var options = {
+            url: url,
+            headers: { 'Authorization': 'Bearer ' + this.credentials['access']},
+            json: true,
+        }
+
+        return this._buildRequest('GET', options);
+    }
+
 }
 
 var spotify = new Spotify(secret.clientId, secret.clientSecret, 'https://later.com');
@@ -303,13 +328,12 @@ spotify.setScope(newScopes);
 
 spotify.setRefreshToken(secret.refresh);
 
-
 spotify.renewAccessToken()
     .then(token => {
-        return spotify.getMyTopArtists({time_range: 'long_term', limit: 5});
+        return spotify.getMyProfile();
     })
-    .then(topArtists => {
-        topArtists.items.forEach(artist => console.log(artist.name))
+    .then(profile => {
+        console.log(profile);
     })
     .catch(err => console.log(err));
 
@@ -321,4 +345,4 @@ module.exports = {
     Spotify: Spotify,
 }
 
-// spotify.generateAuthorizationUrl();
+
