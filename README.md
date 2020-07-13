@@ -13,7 +13,7 @@ getUserPlaylists(userID: string, formOptions?)
 ```
 - Access current user's playlist
 ```js
-getCurrentUsersPlaylists(formOptions?)
+getMyPlaylists(formOptions?)
 ```
 - Access a specific playlist by passing the spotify playlist Id
 ```js
