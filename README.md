@@ -8,17 +8,21 @@ Wrapper is in it's inital stages and will be updated heavily.
 
 ### Playlists
 - Access a user's playlist by passing spotify user name
-```js 
-getUserPlaylists(userID: string, formOptions?)
-```
 - Access current user's playlist
-```js
-getMyPlaylists(formOptions?)
-```
 - Access a specific playlist by passing the spotify playlist Id
-```js
-getPlaylistById(playlistId: string, formOptions?)
-```
+- Access the tracks on a playlist by passing the spotify playlist id
+
+### Personalization
+- Get current user's top tracks
+- Get current user's top artists
+
+### Profile
+- Get current user's profile information
+- Get a user's profile information
+
+### TODO:
+- Get user's liked songs
+- Spotifty search
 
 ## Usage
 
